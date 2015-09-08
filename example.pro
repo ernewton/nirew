@@ -22,8 +22,7 @@ PRO EXAMPLE
   pixscale = 0.00053752800
 
   ; shift to rest
-  ERN_RV, data_tc[*,*,order], std, wrange=wrange, pixscale=pixscale, rv0=rv0
-
+  ERN_RV, data_tc[*,*,order], std, wrange=wrange, pixscale=pixscale, rv0=rv0, ccorr=1
   ; don't oversample
   lambda = data_tc[*,0,order] - rv0/(3.*10.^5)*data_tc[*,0,order]
   flux = data_tc[*,1,order]
@@ -40,7 +39,7 @@ PRO EXAMPLE
 
   ; FIRE spectra (merged)
   data = read_fire('J04555445+0440164',dir='spec')
-  ERN_RV, data, std, wrange=wrange, pixscale=pixscale, rv0=rv0
+  ERN_RV, data, std, wrange=wrange, pixscale=pixscale, rv0=rv0, ccorr=1
   ew = measure_ew(data[*,0] - rv0/(3.*10.^5)*data[*,0],data[*,1],continuum,feature)
   print, "FIRE, no smoothing: ", ew
 
