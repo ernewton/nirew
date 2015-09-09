@@ -1,5 +1,7 @@
-PRO JL_EXAMPLE
-  ;mkct ;load indexed color table
+PRO JL_EXAMPLE, showplot=showplot, ps=ps
+
+  IF N_ELEMENTS(showplot) EQ 0 THEN showplot = 1
+
   ; line definitions
   READCOL, 'linedefs.txt', lineall, f1all,f2all, c1all, c2all, c3all, c4all,format='A,F,F,F,F,F,F'
   
@@ -20,7 +22,7 @@ PRO JL_EXAMPLE
   
   ; Determine spectral type using N14 relation
   ;merged = mrdfits('~/Dropbox/Merged-New-JJ1629.fits',0)
-  index = waterindex(data_tc[*,0,0],data_tc[*,1,0])
+  index = water_index(data_tc[*,0,0],data_tc[*,1,0])
   print, 'Water index: ',index
   
   ; shift to rest
@@ -64,15 +66,13 @@ PRO JL_EXAMPLE
         
         
         ; plots for good measure
-        PLT = 1
-        PS = 0
-        IF PLT THEN BEGIN
+        IF KEYWORD_SET(showplot) THEN BEGIN
           pseudo=ew_pseudo(lambda, flux,continuum)
           xrange=[continuum[0] - 0.01,continuum[3] + 0.01]
           y = flux/pseudo
           y = y[where((lambda ge xrange[0]) and (lambda le xrange[1]))]
           yrange = [MIN(y)*.9,MAX(y)*1.1]
-          IF PS THEN BEGIN
+          IF KEYWORD_SET(ps) THEN BEGIN
             set_plot,'PS'
             device,filen = sxpar(hdr,'OBJECT')+'_Feature_'+lineall[k]+'.eps',/enca,/col
           ENDIF

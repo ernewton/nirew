@@ -9,23 +9,30 @@ FUNCTION MEASURE_EW, $
   showplot=showplot, $
   rvoffset=rvoffset, $ ; apply an RV offset
   nan=nan, $ ; bad measurements are NaNs
-  zero=zero ; bad measurements are zeros
+  zero=zero, $ ; bad measurements are zeros
+  verbose=verbose
 
+  IF ~KEYWORD_SET(verbose) THEN verbose=0
 
   IF KEYWORD_SET(zero) THEN BEGIN
     slambda = lambda[WHERE(flux GT 0)]
     sflux = flux[WHERE(flux GT 0)]  
+    IF verbose THEN print, "MEASURE_EW: using non-zero fluxes."
   ENDIF ELSE IF KEYWORD_SET(nan) THEN BEGIN
     slambda = lambda[WHERE(FINITE(flux))]
     sflux = flux[WHERE(FINITE(flux))]
+    IF verbose THEN print, "MEASURE_EW: using finite fluxes."
   ENDIF ELSE BEGIN
     slambda = lambda ; don't modify the original value
     sflux = flux
+    IF verbose THEN print, "MEASURE_EW: using all provided data."
   ENDELSE
 
   ; do rv offset
-  IF KEYWORD_SET(rvoffset) THEN $
+  IF KEYWORD_SET(rvoffset) THEN BEGIN
     slambda = slambda - rvoffset/(3.e5)*slambda
+    print, "MEASURE_EW: applying providing RV offset."
+  ENDIF
 
   ; find pseudocontinuum 
   pseudo=ew_pseudo(slambda, sflux, continuum)
@@ -44,7 +51,6 @@ FUNCTION MEASURE_EW, $
 
   IF KEYWORD_SET(showplot) AND FINITE(out) THEN BEGIN
   
-    mkct
     plot, lambda, sflux, xrange=[continuum[0,0]-.012,continuum[1,1]+.012], thick=2, /ynozero, /xsty
     oplot,[feature[0],feature[0]],[0,100],color=2
     oplot,[feature[1],feature[1]],[0,100],color=2
