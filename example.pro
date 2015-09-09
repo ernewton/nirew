@@ -32,7 +32,7 @@ PRO EXAMPLE
 
   ; oversample flux
   inc0 = N_ELEMENTS(data_tc[*,0,order])*10.
-  lambda0 = REBIN(data_tc[*,0,order],inc0)
+  lambda0 = REBIN(data_tc[*,0,order] - rv0/(3.*10.^5)*data_tc[*,0,order],inc0)
   flux0 = REBIN(data_tc[*,1,order],inc0)
   ew = measure_ew(lambda0,flux0,continuum,feature)
   print, "SpEX,     oversampling: ", ew
@@ -57,6 +57,8 @@ PRO EXAMPLE
   ; plots for good measure
   pseudo=ew_pseudo(lambda, flux,continuum)
   plot, lambda,flux/pseudo, xrange=[2.18,2.23], yrange=[0.6,1.05]
+  pseudo2=ew_pseudo(lambda0, flux0,continuum)
+  oplot, lambda0, flux0/pseudo2, co=5
   pseudo3=ew_pseudo(data_lowres[*,0],data_lowres[*,1],continuum)
   oplot, data_lowres[*,0] - rv0/(3.*10.^5)*data[*,0],data_lowres[*,1]/pseudo3, co=4
 
