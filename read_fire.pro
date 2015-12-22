@@ -1,7 +1,7 @@
 ; READ_FIRE
-; Read a spectrum produced by 
+; Read a spectrum produced by FIRE
 
-FUNCTION read_fire, star, dir=dir, suffix=suffix, noerr=noerr, irtf=irtf, struct=struct, verbose=verbose
+FUNCTION read_fire, star, dir=dir, suffix=suffix, noerr=noerr, irtf=irtf, struct=struct, verbose=verbose, hdr=hd
 
   IF KEYWORD_SET(verbose) THEN silent = 0 ELSE silent = 1
 
