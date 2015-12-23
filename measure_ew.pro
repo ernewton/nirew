@@ -1,32 +1,76 @@
-; MEASURE_EW
-; Measure the EW given the feature and continuum windows. Return EW in Angstroms.
+;+
+; NAME:
+;	MEASURE_EW
+; PURPOSE:
+;	Calculate equivalenth widths (EWs).
+; EXPLANATION:
+;	Measure the EW given the feature and continuum windows. Return EW in Angstroms.
+;
+; CALLING SEQUENCE:
+;      ew = MEASURE_EW(lambda, flux, continuum, feature,
+;		[RVOFFSET=, /NAN, /ZERO, 
+;		/SHOWPLOT, /QUIET])
+;
+; INPUTS:
+;	lambda = Wavelength array
+;	flux = Flux array
+;	continuum = Array with continuum window defintion
+;	feature = Array with feature window definition
+;	
+; OPTIONAL INPUTS:
+;	None
+;
+; OPTIONAL KEYWORD INPUTS:
+;	rvoffset = An RV shift to apply [None]
+;	nan = Flag to remove NaNs from the data
+;	zero = Flag to remove zeros from the data
+;	showplot = Flag to show plot
+;	quiet = Flag to limit messages
+;
+; OUTPUTS:
+;	ew = measure EW in Angstroms
+;
+; EXAMPLE:
+;	data = MRDFITS('spec/J0455+0440W_tc.fits')
+;  	continuum = [[blue1, blue2]],[red1, red2]]
+;  	feature = [f1,f2]
+;	ew = measure_ew(data[*,0,0], data[*,1,0], $
+;		continuum, feature, /showplot)
+;
+; METHOD:
+;	Fits a straight line to the continuum regions to use as a
+;	pseudo-continuum. Uses the trapezoidal rule to calculate the
+;	equivalenth width. IT IS RECOMMENDED THAT YOU OVERSAMPLE THE
+;	SPECTRUM TO MITIGATE EDGE EFFECTS. See examples.
+;
+; PROCEDURES USED:
+;	nirew
+;
+;-
 
 
 FUNCTION MEASURE_EW, $
   lambda, flux, $
   continuum, $
   feature, $
-  showplot=showplot, $
   rvoffset=rvoffset, $ ; apply an RV offset
   nan=nan, $ ; bad measurements are NaNs
   zero=zero, $ ; bad measurements are zeros
-  verbose=verbose
+  showplot=showplot, $
+  quiet=quiet
 
-  IF ~KEYWORD_SET(verbose) THEN verbose=0
-
+  slambda = lambda ; don't modify the original value
+  sflux = flux
   IF KEYWORD_SET(zero) THEN BEGIN
-    slambda = lambda[WHERE(flux GT 0)]
-    sflux = flux[WHERE(flux GT 0)]  
-    IF verbose THEN print, "MEASURE_EW: using non-zero fluxes."
-  ENDIF ELSE IF KEYWORD_SET(nan) THEN BEGIN
-    slambda = lambda[WHERE(FINITE(flux))]
-    sflux = flux[WHERE(FINITE(flux))]
-    IF verbose THEN print, "MEASURE_EW: using finite fluxes."
-  ENDIF ELSE BEGIN
-    slambda = lambda ; don't modify the original value
-    sflux = flux
-    IF verbose THEN print, "MEASURE_EW: using all provided data."
-  ENDELSE
+    slambda = slambda[WHERE(sflux GT 0)]
+    sflux = sflux[WHERE(sflux GT 0)]  
+    IF ~KEYWORD_SET(quiet) THEN print, "MEASURE_EW: using non-zero fluxes."
+  IF KEYWORD_SET(nan) THEN BEGIN
+    slambda = slambda[WHERE(FINITE(sflux))]
+    sflux = sflux[WHERE(FINITE(sflux))]
+    IF ~KEYWORD_SET(quiet) THEN print, "MEASURE_EW: using finite fluxes."
+  IF ~KEYWORD_SET(nan) AND ~KEYWORD_SET(zero) THEN IF ~KEYWORD_SET(quiet) THEN print, "MEASURE_EW: using all provided data."
+
 
   ; do rv offset
   IF KEYWORD_SET(rvoffset) THEN BEGIN

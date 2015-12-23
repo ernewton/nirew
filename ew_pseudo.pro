@@ -1,4 +1,6 @@
- ; find the pseudocontinuum
+;============================================
+; find the pseudocontinuum
+
 FUNCTION EW_PSEUDO, $
   lambda, flux, $
   continuum, $

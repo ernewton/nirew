@@ -8,7 +8,7 @@ PRO EXAMPLE
   ; line definitions
   READCOL, 'linedefs.txt', lineall, f1all,f2all, c1all, c2all, c3all, c4all,  format='A,F,F,F,F,F,F'
 
-  ; standard RV file (K-band only for now)
+  ; standard RV file
   std = MRDFITS('spec/J0727+0513_rest.fits',0, /silent)
 
   ; example -- Na at 2.2 microns
@@ -35,9 +35,9 @@ PRO EXAMPLE
   hindk2 = water_index(lambda, flux, verbose=1)
   print, "========="
   print, "SpeX,  no oversampling: ", ew
-  print, "            --> [Fe/H] = ", na_feh(ew)
+  print, "            --> [Fe/H] = ", na2feh(ew)
   print, "            H2O-K2 index: ", hindk2
-  print, "            --> SpType = ", sp_hind(hindk2)
+  print, "            --> SpType = ", hind2sp(hindk2)
   print, "========="
   ; oversample flux
   inc0 = N_ELEMENTS(data_tc[*,0,order])*10.
@@ -45,10 +45,10 @@ PRO EXAMPLE
   flux0 = REBIN(data_tc[*,1,order],inc0)
   ew = measure_ew(lambda0,flux0,continuum,feature)
   print, "SpeX,     oversampling: ", ew
-  print, "            --> [Fe/H] = ", na_feh(ew)
+  print, "            --> [Fe/H] = ", na2feh(ew)
   hindk2 = water_index(lambda0, flux0)
   print, "            H2O-K2 index: ", hindk2
-  print, "            --> SpType = ", sp_hind(hindk2)
+  print, "            --> SpType = ", hind2sp(hindk2)
   print, "========="
 
   ; FIRE spectra (merged)
@@ -56,20 +56,20 @@ PRO EXAMPLE
   ERN_RV, data, std[*,*,order], wrange=wrange, pixscale=pixscale, rv0=rv0, ccorr_fxn=ccorr_fxn, /quiet
   ew = measure_ew(data[*,0] - rv0/(3.*10.^5)*data[*,0],data[*,1],continuum,feature)
   print, "FIRE,     no smoothing: ", ew
-  print, "            --> [Fe/H] = ", na_feh(ew)
+  print, "            --> [Fe/H] = ", na2feh(ew)
   hindk2 = water_index(data[*,0], data[*,1])
   print, "            H2O-K2 index: ", hindk2
-  print, "            --> SpType = ", sp_hind(hindk2)
+  print, "            --> SpType = ", hind2sp(hindk2)
   print, "========="
 
   ; resolution degraded
   data_lowres = read_fire('J04555445+0440164',dir='spec', /irtf)
   ew = measure_ew(data[*,0] - rv0/(3.*10.^5)*data[*,0],data_lowres[*,1],continuum,feature)
   print, "FIRE, degraded to SpeX: ", ew
-  print, "            --> [Fe/H] = ", na_feh(ew)
+  print, "            --> [Fe/H] = ", na2feh(ew)
   hindk2 = water_index(data_lowres[*,0], data_lowres[*,1])
   print, "            H2O-K2 index: ", hindk2
-  print, "            --> SpType = ", sp_hind(hindk2)
+  print, "            --> SpType = ", hind2sp(hindk2)
   print, "========="
 
   ; plots for good measure
