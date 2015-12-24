@@ -10,10 +10,12 @@
 ;	type.
 ;
 ; CALLING SEQUENCE:
-;      MEASURE_KBAND, data, [NA=, ENA=, FEH=, EFEH=,
+;      MEASURE_KBAND, data, [FEH=, EFEH=,
+;		NA=, ENA=, 
 ;		HINDK2=, SPTYPE=,
 ;		NITERS=, /ERROR,
-;		CCORR=, /CONTF]
+;		CCORR=, /CONTF, /ATREST,
+;		/SHOWPLOT, /QUIET]
 ;
 ; INPUTS:
 ;	data = Array containing [[wave],[flux],[eflux]]
@@ -28,12 +30,14 @@
 ;	ccorr = cross-correlation routine to use ['c_correlate']
 ;	contf = flag to use contf continuum function
 ;	atrest = flag to skip shift to rest velocity
+;	showplot = flag show plots for debugging
+;	quiet = flag to suppress messages
 ;
 ; OUTPUTS:
-;	na = Na EW in Angstroms
-;	ena = Error on Na EW
 ;	feh = Metallicity estimate from Na EW in dex
 ;	efeh = Error on metallicity
+;	na = Na EW in Angstroms
+;	ena = Error on Na EW
 ;	hindk2 = H2O-K2 index
 ;	sptype = Spectral type estimated from hindk2
 ;	
@@ -56,7 +60,13 @@
 ;
 ;-
 
-PRO measure_kband, data, na=ew, ena=eew, feh=nafeh, efeh=efeh, hindk2=hind, sptype=sp_hind, niters=ni, error=doerrors, ccorr=ccorr, contf=contf, atrest=atrest, lam=lambda0, fl=flux0
+PRO measure_kband, data, $
+  feh=nafeh, efeh=efeh, $
+  na=ew, ena=eew, $
+  hindk2=hind, sptype=sp_hind, $
+  niters=ni, error=doerrors, $
+  ccorr=ccorr, contf=contf, atrest=atrest, $
+  showplot=showplot, quiet=quiet
 
   IF KEYWORD_SET(doerrors) THEN BEGIN
     IF ~KEYWORD_SET(ni) THEN ni=100

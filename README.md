@@ -2,6 +2,8 @@
 
 This code measures equivalent widths (EWs) from spectra, with an emphasis on NIR absorptiion features. It also can be used to infer stellar parameters, including metallicity, spectral type, temperature, radius, and luminosity based on established relationships with spectral features.
 
+To use: set the environment variable $NIREW to the code directory, and add the tellrv and nirew directories to your IDL path.
+
 ## Important notes
 
 The H-band feature definitions in Table 1 in Newton et al. (2015) are from a previous version of this code. The feature definitions included here are correct, and are consistent with the rest of the paper.

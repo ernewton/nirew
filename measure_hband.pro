@@ -8,9 +8,11 @@
 ;	estimate temperature, radius, and luminosity. 
 ;
 ; CALLING SEQUENCE:
-;      MEASURE_HBAND, data, [MG1=, MG2=, MG3=,
-;		ALA=, ALB=, CCORR=, /CONTF,
-;		TEFF=, RAD=, LUM=, 
+;      MEASURE_HBAND, data, [TEFF=, RAD=, LUM=, 
+;		ETEFF=, ERAD=, ELUM=,
+;		EW=, EEW=,
+;		NITERS=, /ERROR,
+;		CCORR=, /CONTF, /ATREST,
 ;		/SHOWPLOT, /QUIET]
 ;
 ; INPUTS:
@@ -21,46 +23,55 @@
 ;	None
 ;
 ; OPTIONAL KEYWORD INPUTS:
+;	niters = number of iterations for Monte Carlo error simulation [100]
+;	error = flag to do Monte Carlo error simulation [0]
 ;	ccorr = cross-correlation routine to use ['c_correlate']
 ;	contf = flag to use contf continuum function
 ;	atrest = flag to skip shift to rest velocity
+;	showplot = flag show plots for debugging
+;	quiet = flag to suppress messages
 ;
 ; OUTPUTS:
-;	mg1 = EW of Mg at 1.50 microns, in Angstroms
-;	mg2 = EW of Mg at 1.57 microns, in Angstroms
-;	mg3 = EW of Mg at 1.71 microns, in Angstroms
-;	ala = EW of Al at 1.67 microns (blue line), in Angstroms
-;	alb = EW of Mg at 1.67 microns (red line), in Angstroms
 ;	teff = Estimated effective temperature, in K
 ;	rad = Estimated radius, in Rsun
 ;	lum = Estimated log luminosity, in Lsun
-;
+;	eteff = Error on teff
+;	erad = Error on rad
+;	elum = Error on luminosity;
+;	ew = Array of EWs in Angstroms, including:
+;		mg1 = EW of Mg at 1.50 microns
+;		mg2 = EW of Mg at 1.57 microns
+;		mg3 = EW of Mg at 1.71 microns
+;		ala = EW of Al at 1.67 microns (blue line)
+;		alb = EW of Mg at 1.67 microns (red line)
+;	eew = Array of errors on EWs
+;	
 ; EXAMPLE:
 ; 	data = MRDFITS('spec/J0200+1303_tc.fits')
 ; 	d0 = MRDFITS('spec/J0200+1303.fits')
 ; 	data[*,0,*] = d0[*,0,*]
-; 	measure_hband, data, teff=teff, rad=rad, lum=lum, ew=ew
-;	print, teff
-;	print, rad
-;	print, logl
+; 	measure_hband, data, teff=teff, rad=rad, lum=lum, eteff=eteff, erad=erad, elum=elum, ew=ew
 ;
 ; METHOD:
 ;	Shifts system to rest velocity by cross-correlating with a standard.
 ;	Measures the EW and calculates stellar properties using the calibration
-;	from Newton et al. (2015).
+;	from Newton et al. (2015). Optionally perform a Monte Carlo analysis
+;	to estimate errors in Na EW and in metallicity.
 ;
 ; PROCEDURES USED:
 ;	nirew
 ;	tellrv
 ; 
-; NOTE: EW defintions as originally published in Newton et al. (2015) are from
-; 	an earlier version of the code. The correct definitions, which reproduce
+; NOTE: EW defintions as originally published in Table 1 of Newton et al. (2015) are 
+;	from an earlier version of the code. The correct definitions, which reproduce
 ;	the EWs used in that paper, are used here.
 ;-
 
 PRO MEASURE_HBAND, data, $
-  ew=ew, eew=eew, $
   teff=teff, rad=rad, lum=lum, $
+  eteff=eteff, erad=erad, elum=elum, $
+  ew=ew, eew=eew, $
+  niters=ni, error=doerrors, $
   ccorr=ccorr, contf=contf, atrest=atrest, $
   showplot=showplot, quiet=quiet
   
@@ -97,8 +108,9 @@ PRO MEASURE_HBAND, data, $
     ENDIF
     
     ; shift to rest
+    IF KEYWORD_SET(quiet) THEN iquiet = quiet ELSE IF i GT 0 THEN iquiet=1
     IF KEYWORD_SET(atrest) THEN rv0 = 0 ELSE $
-      ERN_RV, mydata, std[*,*,sorder], wrange=wrange, rv0=rv0, ccorr=ccorr, contf=contf, quiet=quiet
+      ERN_RV, mydata, std[*,*,sorder], wrange=wrange, rv0=rv0, ccorr=ccorr, contf=contf, quiet=iquiet
 
     ; oversample flux
     inc0 = N_ELEMENTS(mydata[*,0])*10.
@@ -111,7 +123,7 @@ PRO MEASURE_HBAND, data, $
     FOREACH k, lines DO BEGIN
       continuum = [[c1all[k], c2all[k]],[c3all[k],c4all[k]]]
       feature = [f1all[k],f2all[k]]
-      ewi = measure_ew(lambda0,flux0,continuum,feature, showplot=showplot, quiet=quiet)
+      ewi = measure_ew(lambda0,flux0,continuum,feature, showplot=showplot, quiet=iquiet)
       IF KEYWORD_SET(showplot) THEN wait, 1
       ewveci[j] = ewi
       j++
@@ -120,12 +132,12 @@ PRO MEASURE_HBAND, data, $
     IF i EQ 0 THEN BEGIN ; measured value
       ew = ewveci
     ENDIF ELSE BEGIN ; to calculate errors
-      ewvec[i-1] = ewveci
+      ewvec[i-1,*] = ewveci
     ENDELSE
-
 
   ENDFOR
 
+  ; calculate stellar parameters
   mg1 = ew[0]
   mg2 = ew[1]
   ala = ew[2]
@@ -142,5 +154,53 @@ PRO MEASURE_HBAND, data, $
   teff = EW2TEFF(mg1, ala, alb)
   rad = EW2RAD(mg2, ala)
   lum = EW2LUM(mg1, mg3)
+
+  ; errors on things
+  IF KEYWORD_SET(doerrors) THEN BEGIN
+    
+    ; error in EW
+    eew = FLTARR(N_ELEMENTS(ew))
+    FOR i=0, N_ELEMENTS(ew)-1 DO BEGIN
+      conf = confidence_interval(ewvec[*,i])
+      eew[i] = (conf[2]-conf[0])/2.
+    ENDFOR
+    
+    ; this takes the sample of EW measurements and runs each through the best fit
+    arr = EW2TEFF(ewvec[*,0], ewvec[*,2], ewvec[*,3])
+    conf = confidence_interval(arr)
+    rand = (conf[2]-conf[0])/2. ; EW error
+    intr = 73. ; intrinsic scatter in relation
+    eteff = SQRT(rand^2 + intr^2)
+    ; Al-b and Al-b EWs are somewhat correlated so error is smaller this way
+    ;	than if supplying EW errors to program
+
+    arr = EW2RAD(ewvec[*,1], ewvec[*,2])
+    conf = confidence_interval(arr)
+    rand = (conf[2]-conf[0])/2. ; EW error
+    intr = 0.027 ; intrinsic scatter in relation
+    erad = SQRT(rand^2 + intr^2)
+
+    arr = EW2LUM(ewvec[*,0], ewvec[*,4])
+    conf = confidence_interval(arr)
+    rand = (conf[2]-conf[0])/2. ; EW error
+    intr = 0.049 ; intrinsic scatter in relation
+    elum = SQRT(rand^2 + intr^2)
+
+    IF ~KEYWORD_SET(quiet) THEN BEGIN
+      print, "teff =   ", teff, " +-", eteff
+      print, "rad =    ", rad, " +-", erad
+      print, "loglum = ", lum, " +-", elum
+      print, "Random errors from EWs combined in quadrature with intrinsic scatter."
+    ENDIF
+
+  ENDIF ELSE BEGIN
+  
+    IF ~KEYWORD_SET(quiet) THEN BEGIN
+      print, "teff =   ", teff
+      print, "rad  =   ", rad
+      print, "loglum = ", lum
+    ENDIF
+
+  ENDELSE
 
 END
