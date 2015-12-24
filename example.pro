@@ -3,12 +3,14 @@
 
 PRO EXAMPLE
 
-  ccorr_fxn = 'cross_correlate'
+  ccorr = 'xcorl' ;'cross_correlate', 'c_correlate'
+  contf = 1 ; '0'
+  quiet = 1
 
   ; line definitions
-  READCOL, 'linedefs.txt', lineall, f1all,f2all, c1all, c2all, c3all, c4all,  format='A,F,F,F,F,F,F'
+  READCOL, 'linedefs.txt', lineall, f1all,f2all, c1all, c2all, c3all, c4all,  format='A,F,F,F,F,F,F', /silent
 
-  ; standard RV file
+  ; standard RV file (already at rest)
   std = MRDFITS('spec/J0727+0513_rest.fits',0, /silent)
 
   ; example -- Na at 2.2 microns
@@ -18,7 +20,7 @@ PRO EXAMPLE
 
   ; IRTF spectra (unmerged)
   star = 'spec/J0455+0440W_tc.fits'
-  data_tc = MRDFITS(star, 0, hdr)
+  data_tc = MRDFITS(star, 0, hdr, /silent)
 
   ; K-band specifics
   order = 0
@@ -27,12 +29,12 @@ PRO EXAMPLE
   pixscale = SXPAR(hdr, STRING(orders[order],FORMAT='("DISPO",I02)'))
 
   ; shift to rest
-  ERN_RV, data_tc[*,*,order], std[*,*,order], wrange=wrange, pixscale=pixscale, rv0=rv0, ccorr_fxn=ccorr_fxn, /quiet
+  ERN_RV, data_tc[*,*,order], std[*,*,order], wrange=wrange, pixscale=pixscale, rv0=rv0, ccorr=ccorr, contf=contf, quiet=quiet
   ; don't oversample
   lambda = data_tc[*,0,order] - rv0/(3.*10.^5)*data_tc[*,0,order]
   flux = data_tc[*,1,order]
-  ew = measure_ew(lambda,flux,continuum,feature, verbose=1)
-  hindk2 = water_index(lambda, flux, verbose=1)
+  ew = measure_ew(lambda,flux,continuum,feature, quiet=quiet)
+  hindk2 = water_index(lambda, flux)
   print, "========="
   print, "SpeX,  no oversampling: ", ew
   print, "            --> [Fe/H] = ", na2feh(ew)
@@ -43,7 +45,7 @@ PRO EXAMPLE
   inc0 = N_ELEMENTS(data_tc[*,0,order])*10.
   lambda0 = REBIN(data_tc[*,0,order] - rv0/(3.*10.^5)*data_tc[*,0,order],inc0)
   flux0 = REBIN(data_tc[*,1,order],inc0)
-  ew = measure_ew(lambda0,flux0,continuum,feature)
+  ew = measure_ew(lambda0,flux0,continuum,feature, quiet=quiet)
   print, "SpeX,     oversampling: ", ew
   print, "            --> [Fe/H] = ", na2feh(ew)
   hindk2 = water_index(lambda0, flux0)
@@ -53,8 +55,8 @@ PRO EXAMPLE
 
   ; FIRE spectra (merged)
   data = read_fire('J04555445+0440164',dir='spec')
-  ERN_RV, data, std[*,*,order], wrange=wrange, pixscale=pixscale, rv0=rv0, ccorr_fxn=ccorr_fxn, /quiet
-  ew = measure_ew(data[*,0] - rv0/(3.*10.^5)*data[*,0],data[*,1],continuum,feature)
+  ERN_RV, data, std[*,*,order], wrange=wrange, pixscale=pixscale, rv0=rv0, ccorr=ccorr, /quiet
+  ew = measure_ew(data[*,0] - rv0/(3.*10.^5)*data[*,0],data[*,1],continuum,feature, quiet=quiet)
   print, "FIRE,     no smoothing: ", ew
   print, "            --> [Fe/H] = ", na2feh(ew)
   hindk2 = water_index(data[*,0], data[*,1])
@@ -64,7 +66,7 @@ PRO EXAMPLE
 
   ; resolution degraded
   data_lowres = read_fire('J04555445+0440164',dir='spec', /irtf)
-  ew = measure_ew(data[*,0] - rv0/(3.*10.^5)*data[*,0],data_lowres[*,1],continuum,feature)
+  ew = measure_ew(data[*,0] - rv0/(3.*10.^5)*data[*,0],data_lowres[*,1],continuum,feature, quiet=quiet)
   print, "FIRE, degraded to SpeX: ", ew
   print, "            --> [Fe/H] = ", na2feh(ew)
   hindk2 = water_index(data_lowres[*,0], data_lowres[*,1])
@@ -74,10 +76,10 @@ PRO EXAMPLE
 
   ; plots for good measure
   pseudo=ew_pseudo(lambda, flux,continuum)
-  plot, lambda,flux/pseudo, xrange=[2.18,2.23], yrange=[0.6,1.05], $
+  plot, lambda,flux/pseudo, xrange=[2.24,2.285], yrange=[0.6,1.05], $
     xtitle='Wavelength (lambda)', ytitle='Normalized flux + offset'
   pseudo3=ew_pseudo(data_lowres[*,0],data_lowres[*,1],continuum)
-  oplot, data_lowres[*,0] - rv0/(3.*10.^5)*data[*,0],data_lowres[*,1]/pseudo3-0.1
+  oplot, data_lowres[*,0] - rv0/(3.*10.^5)*data_lowres[*,0],data_lowres[*,1]/pseudo3-0.1
 
   oplot,[feature[0],feature[0]],[0,100]
   oplot,[feature[1],feature[1]],[0,100]

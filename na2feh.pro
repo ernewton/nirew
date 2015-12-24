@@ -60,7 +60,6 @@ FUNCTION NA2FEH, na, e_na_low, e_na_high, efeh=feh_err, bfeh=feh_boot, bootstrap
     fehna_high=res00*(na+e_na_high)+res01*(na+e_na_high)^2+res02
     fehna_err=(fehna_high-fehna_low)/2.
     feh_err = fehna_err
-    print, 'Na', feh_err
   ENDIF
 
   ; uncertainty from calibration
@@ -76,7 +75,6 @@ FUNCTION NA2FEH, na, e_na_low, e_na_high, efeh=feh_err, bfeh=feh_boot, bootstrap
     ENDFOR
     boot_err=(boot_high-boot_low)/2.
     feh_err = boot_err
-    print, 'boot', feh_err
   END
 
   ; combine the errors

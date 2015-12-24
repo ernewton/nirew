@@ -65,10 +65,12 @@ FUNCTION MEASURE_EW, $
     slambda = slambda[WHERE(sflux GT 0)]
     sflux = sflux[WHERE(sflux GT 0)]  
     IF ~KEYWORD_SET(quiet) THEN print, "MEASURE_EW: using non-zero fluxes."
+  ENDIF
   IF KEYWORD_SET(nan) THEN BEGIN
     slambda = slambda[WHERE(FINITE(sflux))]
     sflux = sflux[WHERE(FINITE(sflux))]
     IF ~KEYWORD_SET(quiet) THEN print, "MEASURE_EW: using finite fluxes."
+  ENDIF
   IF ~KEYWORD_SET(nan) AND ~KEYWORD_SET(zero) THEN IF ~KEYWORD_SET(quiet) THEN print, "MEASURE_EW: using all provided data."
 
 
@@ -96,13 +98,13 @@ FUNCTION MEASURE_EW, $
   IF KEYWORD_SET(showplot) AND FINITE(out) THEN BEGIN
   
     plot, lambda, sflux, xrange=[continuum[0,0]-.012,continuum[1,1]+.012], thick=2, /ynozero, /xsty
-    oplot,[feature[0],feature[0]],[0,100],color=2
-    oplot,[feature[1],feature[1]],[0,100],color=2
-    oplot,[continuum[0,0],continuum[0,0]],[0,10],color=3,linestyle=2
-    oplot, [continuum[0,1],continuum[0,1]],[0,100],color=3,linestyle=2
-    oplot, [continuum[1,1],continuum[1,1]],[0,100],color=3,linestyle=2
-    oplot, [continuum[1,0],continuum[1,0]],[0,100],color=3,linestyle=2
-    oplot, lambda, pseudo, color=3
+    oplot,[feature[0],feature[0]],[0,100]
+    oplot,[feature[1],feature[1]],[0,100]
+    oplot,[continuum[0,0],continuum[0,0]],[0,10],linestyle=2
+    oplot, [continuum[0,1],continuum[0,1]],[0,100],linestyle=2
+    oplot, [continuum[1,1],continuum[1,1]],[0,100],linestyle=2
+    oplot, [continuum[1,0],continuum[1,0]],[0,100],linestyle=2
+    oplot, lambda, pseudo
 
     print, 'MEASURE_EW: Measured EW in Angstroms: ', out
   ENDIF

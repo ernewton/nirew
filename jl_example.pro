@@ -6,18 +6,21 @@ PRO JL_EXAMPLE, showplot=showplot, ps=ps
 
   IF N_ELEMENTS(ps) EQ 0 THEN ps = 0
   IF N_ELEMENTS(showplot) EQ 0 THEN showplot = 1
-  ccorr_fxn='c_correlate'
+  ccorr='c_correlate'
+  contf=0
 
   ; line definitions
-  READCOL, 'linedefs.txt', lineall, f1all,f2all, c1all, c2all, c3all, c4all,format='A,F,F,F,F,F,F'
+  READCOL, 'linedefs.txt', lineall, f1all,f2all, c1all, c2all, c3all, c4all,format='A,F,F,F,F,F,F', /silent
   
   ; standard RV file (K-band only for now)
-  std_tc = MRDFITS('spec/J0727+0513_rest.fits',0, shdr)
+  std_tc = MRDFITS('spec/J0727+0513_rest.fits',0, shdr, /silent)
+  wlcal=1
+  atrest=1
   
   ; IRTF telluric corrected spectra (unmerged)
-  star = 'J0455+0440W'
-  data_tc = MRDFITS('spec/'+star+'_tc.fits', 0, hdr)
-  data = MRDFITS('spec/'+star+'.fits', 0, hdr)
+  star = 'J0200+1303'
+  data_tc = MRDFITS('spec/'+star+'_tc.fits', 0, hdr, /silent)
+  data = MRDFITS('spec/'+star+'.fits', 0, hdr, /silent)
   data_tc[*,0,*] = data[*,0,*]
   orders = STRSPLIT(SXPAR(hdr,'ORDERS'),',',/extract)
   
@@ -39,17 +42,21 @@ PRO JL_EXAMPLE, showplot=showplot, ps=ps
       else: wrange = [MIN(data_tc[*,0,order]),MAX(data_tc[*,0,order])]
     ENDCASE
     order_variables, hdr, order, wrange, trange, pixscale, polydegree, instrument="spex"
-    NIR_RV, data_tc[*,*,order],hdr, data[*,*,order], $
-	std_tc[*,*,order],shdr, $
-	/wlcal, stdrv=0., $ ; already wavelength calibrated?
+    dtc = data_tc[*,*,order]
+    d = data[*,*,order]
+    stc = std_tc[*,*,order]
+;     s = std[*,*,order]
+    NIR_RV, dtc,hdr, d, $
+	stc,shdr, $
+	wlcal=wlcal, atrest=atrest, stdrv=stdrv, $ ; already wavelength calibrated?
 	pixscale=pixscale, polydegree=polydegree, $
 	spixscale=pixscale, spolydegree=polydegree, $ ; standard is from same set-up 
 	wrange=wrange, trange=trange, $
-	mshft=myshft, torest=myrv0, rv=myrv, $
-	quiet=1
-    rv_arr[order] = myrv
-    rv0_arr[order] = myrv0
-    mshft_arr[order] = myshft
+	mshft=myshft, shftarr=shftarr, torest=myrv0, rv=myrv, $
+	quiet=1, contf=contf, ccorr=ccorr
+    rv_arr[order] = myrv ; measured absolute RV
+    rv0_arr[order] = myrv0 ; shift to zero velocity
+    mshft_arr[order] = myshft ; shift to abs wavelength
   ENDFOR
   print,''
   print,'Radial Velocity (km/s): ',rv_arr 
