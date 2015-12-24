@@ -18,9 +18,13 @@ Demonstrates use of `ern_rv` and `measure_ew` on spectra, showing the effect of 
 ### jl_example
 Demonstrates use of `nir_rv` and `measure_ew` to calculate radial velocity and various EWs.
 
-### measure_na
+### measure_kband
 
 Measure the Na EW from a spectrum and use it to estimate metallicity using relation from Newton et al. (2014). Errors (1-sigma) can also be calculated. See Newton et al. (2014, 2015) for notes on where this relation is applicable. Also calculates H2O-K2 index and uses it to estimate NIR spectral type (Rojas-Ayala et al. 2012, Newton et al. 2014).
+
+### measure_hband
+
+Measure H-band Mg and Al EWs from a spectrum and use them to estimate stellar effective temperature, radius, and luminosity using the relation from Newton et al. (2015). Errors (1-sigma) can also be calculated. See Newton et al. (2015) for notes on where this relation is applicable.
 
 ### measure_ew
 
