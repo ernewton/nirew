@@ -42,6 +42,8 @@ If you use this code in published research, please cite [Newton et al. (2014)](h
 
 If temperature, radius, or luminosity is used, please cite [Newton et al. (2015)](http://adslabs.org/adsabs/abs/2015ApJ...800...85N/)
 
+[![DOI](https://zenodo.org/badge/4705/ernewton/nirew.svg)](https://zenodo.org/badge/latestdoi/4705/ernewton/nirew)
+
 ## License
 
 Copyright 2015 Elisabeth R. Newton. Licensed under the terms of the MIT License (see LICENSE).
