@@ -23,6 +23,7 @@
 ; OPTIONAL KEYWORD INPUTS:
 ;	ccorr = cross-correlation routine to use ['c_correlate']
 ;	contf = flag to use contf continuum function
+;	atrest = flag to skip shift to rest velocity
 ;
 ; OUTPUTS:
 ;	mg1 = EW of Mg at 1.50 microns, in Angstroms
@@ -35,8 +36,10 @@
 ;	lum = Estimated log luminosity, in Lsun
 ;
 ; EXAMPLE:
-;	data = MRDFITS('spec/J0200+1303_tc.fits')
-;	measure_hband, data, teff=teff, rad=rad, logl=logl
+; 	data = MRDFITS('spec/J0200+1303_tc.fits')
+; 	d0 = MRDFITS('spec/J0200+1303.fits')
+; 	data[*,0,*] = d0[*,0,*]
+; 	measure_hband, data, teff=teff, rad=rad, lum=lum, ew=ew
 ;	print, teff
 ;	print, rad
 ;	print, logl
@@ -56,16 +59,16 @@
 ;-
 
 PRO MEASURE_HBAND, data, $
-  mg1=mg1, mg2=mg2, mg3=mg3, ala=ala, alb=alb, $
+  ew=ew, eew=eew, $
   teff=teff, rad=rad, lum=lum, $
-  ccorr=ccorr, contf=contf, $
+  ccorr=ccorr, contf=contf, atrest=atrest, $
   showplot=showplot, quiet=quiet
   
   ; standard RV file
-  std = MRDFITS('spec/J0727+0513_rest.fits',0, /silent)
+  std = MRDFITS('$NIREW/spec/J0727+0513_rest.fits',0, /silent)
 
   ; line definitions
-  READCOL, 'linedefs.txt', lineall, f1all,f2all, c1all, c2all, c3all, c4all,  format='A,F,F,F,F,F,F'
+  READCOL, '$NIREW/linedefs.txt', lineall, f1all,f2all, c1all, c2all, c3all, c4all,  format='A,F,F,F,F,F,F'
   lines = [1,2,4,5,6]
   ; 1 Mg(1.50) mg1
   ; 2 Mg(1.58) mg2
@@ -80,7 +83,8 @@ PRO MEASURE_HBAND, data, $
 
 
   ; settings
-  order = 1
+  sorder = 1
+  IF SIZE(data, /N_DIMEN) EQ 2 THEN order = 0 ELSE order = sorder
   wrange = [1.49, 1.73]
 
   FOR i=0, ni DO BEGIN
@@ -93,7 +97,8 @@ PRO MEASURE_HBAND, data, $
     ENDIF
     
     ; shift to rest
-    ERN_RV, mydata, std[*,*,order], wrange=wrange, rv0=rv0, ccorr=ccorr, contf=contf, quiet=quiet
+    IF KEYWORD_SET(atrest) THEN rv0 = 0 ELSE $
+      ERN_RV, mydata, std[*,*,sorder], wrange=wrange, rv0=rv0, ccorr=ccorr, contf=contf, quiet=quiet
 
     ; oversample flux
     inc0 = N_ELEMENTS(mydata[*,0])*10.
@@ -121,8 +126,21 @@ PRO MEASURE_HBAND, data, $
 
   ENDFOR
 
-  teff = EW2TEFF(ew[0], ew[2], ew[3])
-  rad = EW2RAD(ew[1], ew[2])
-  lum = EW2LUM(ew[0], ew[4])
+  mg1 = ew[0]
+  mg2 = ew[1]
+  ala = ew[2]
+  alb = ew[3]
+  mg3 = ew[4]
+  IF ~KEYWORD_SET(quiet) THEN BEGIN
+    print, "MG1 EW = ", mg1
+    print, "MG2 EW = ", mg2
+    print, "ALA EW = ", ala
+    print, "ALB EW = ", alb
+    print, "MG3 EW = ", mg3
+  ENDIF
+  
+  teff = EW2TEFF(mg1, ala, alb)
+  rad = EW2RAD(mg2, ala)
+  lum = EW2LUM(mg1, mg3)
 
 END

@@ -97,7 +97,7 @@ FUNCTION MEASURE_EW, $
 
   IF KEYWORD_SET(showplot) AND FINITE(out) THEN BEGIN
   
-    plot, lambda, sflux, xrange=[continuum[0,0]-.012,continuum[1,1]+.012], thick=2, /ynozero, /xsty
+    plot, slambda, sflux, xrange=[continuum[0,0]-.012,continuum[1,1]+.012], thick=2, /ynozero, /xsty
     oplot,[feature[0],feature[0]],[0,100]
     oplot,[feature[1],feature[1]],[0,100]
     oplot,[continuum[0,0],continuum[0,0]],[0,10],linestyle=2

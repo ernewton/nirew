@@ -2,3 +2,8 @@
 na_boot.pro*
 binaries*.dat
 read_fast.pro
+spec/61CygB_tc.fits
+spec/GJ380_tc.fits
+spec/GJ412A_tc.fits
+spec/GJ514_tc.fits
+spec/GJ526_tc.fits

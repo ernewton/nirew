@@ -42,12 +42,9 @@ PRO JL_EXAMPLE, showplot=showplot, ps=ps
       else: wrange = [MIN(data_tc[*,0,order]),MAX(data_tc[*,0,order])]
     ENDCASE
     order_variables, hdr, order, wrange, trange, pixscale, polydegree, instrument="spex"
-    dtc = data_tc[*,*,order]
-    d = data[*,*,order]
-    stc = std_tc[*,*,order]
-;     s = std[*,*,order]
-    NIR_RV, dtc,hdr, d, $
-	stc,shdr, $
+    IF KEYWORD_SET(std) THEN s = std[*,*,order]
+    NIR_RV, data_tc[*,*,order],hdr, data[*,*,order], $
+	std_tc[*,*,order],shdr, s, $
 	wlcal=wlcal, atrest=atrest, stdrv=stdrv, $ ; already wavelength calibrated?
 	pixscale=pixscale, polydegree=polydegree, $
 	spixscale=pixscale, spolydegree=polydegree, $ ; standard is from same set-up 

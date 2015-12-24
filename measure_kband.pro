@@ -27,6 +27,7 @@
 ;	error = flag to do Monte Carlo error simulation [0]
 ;	ccorr = cross-correlation routine to use ['c_correlate']
 ;	contf = flag to use contf continuum function
+;	atrest = flag to skip shift to rest velocity
 ;
 ; OUTPUTS:
 ;	na = Na EW in Angstroms
@@ -39,7 +40,7 @@
 ;
 ; EXAMPLE:
 ;	data = MRDFITS('spec/J0200+1303_tc.fits')
-;	measure_na, data, na=naew, ena=enaew, feh=nafeh, efeh=enafeh, /error
+;	measure_kband, data, na=naew, ena=enaew, feh=nafeh, efeh=enafeh, /error
 ;	print, naew, '+-', enaew
 ;	print, nafeh, '+-', enafeh
 ;
@@ -55,7 +56,7 @@
 ;
 ;-
 
-PRO measure_kband, data, na=ew, ena=eew, feh=nafeh, efeh=efeh, hindk2=hind, sptype=sp_hind, niters=ni, error=doerrors, ccorr=ccorr, contf=contf
+PRO measure_kband, data, na=ew, ena=eew, feh=nafeh, efeh=efeh, hindk2=hind, sptype=sp_hind, niters=ni, error=doerrors, ccorr=ccorr, contf=contf, atrest=atrest, lam=lambda0, fl=flux0
 
   IF KEYWORD_SET(doerrors) THEN BEGIN
     IF ~KEYWORD_SET(ni) THEN ni=100
@@ -64,17 +65,18 @@ PRO measure_kband, data, na=ew, ena=eew, feh=nafeh, efeh=efeh, hindk2=hind, spty
   ENDIF ELSE ni = 0
   
   ; standard RV file
-  std = MRDFITS('spec/J0727+0513_rest.fits',0, /silent)
+  std = MRDFITS('$NIREW/spec/J0727+0513_rest.fits',0, /silent)
 
   ; line definitions
-  READCOL, 'linedefs.txt', lineall, f1all,f2all, c1all, c2all, c3all, c4all,  format='A,F,F,F,F,F,F'
+  READCOL, '$NIREW/linedefs.txt', lineall, f1all,f2all, c1all, c2all, c3all, c4all,  format='A,F,F,F,F,F,F'
   k = 7 ; Na at 2.2 microns
   continuum = [[c1all[k], c2all[k]],[c3all[k],c4all[k]]]
   feature = [f1all[k],f2all[k]]
 
   ; settings
-  order = 0
-  wrange = [2.18, 2.41]
+  sorder = 0
+  IF SIZE(data, /N_DIMEN) EQ 2 THEN order = 0 ELSE order = sorder
+  wrange = [2.18, 2.3]
 
   FOR i=0, ni DO BEGIN
   
@@ -86,15 +88,17 @@ PRO measure_kband, data, na=ew, ena=eew, feh=nafeh, efeh=efeh, hindk2=hind, spty
     ENDIF
     
     ; shift to rest
-    ERN_RV, mydata, std[*,*,order], wrange=wrange, rv0=rv0, ccorr=ccorr, contf=contf, quiet=quiet
+    IF KEYWORD_SET(quiet) THEN iquiet = quiet ELSE IF i GT 0 THEN iquiet=1
+    IF KEYWORD_SET(atrest) THEN rv0 = 0 ELSE $
+      ERN_RV, mydata, std[*,*,sorder], wrange=wrange, rv0=rv0, ccorr=ccorr, contf=contf, quiet=iquiet
 
     ; oversample flux
     inc0 = N_ELEMENTS(mydata[*,0])*10.
     lambda0 = REBIN(mydata[*,0]*(1. - rv0/(3.*10.^5)),inc0)
     flux0 = REBIN(mydata[*,1],inc0)
-  
+
     ; calculate parameters of interest
-    ewi = measure_ew(lambda0,flux0,continuum,feature, quiet=quiet)
+    ewi = measure_ew(lambda0,flux0,continuum,feature, quiet=iquiet, showplot=showplot)
 ;     hi = water_index(lambda0, flux0)
     
     IF i EQ 0 THEN BEGIN ; measured value

@@ -2,13 +2,15 @@
 
 This code measures equivalent widths (EWs) from spectra, with an emphasis on NIR absorptiion features. It also can be used to infer stellar parameters, including metallicity, spectral type, temperature, radius, and luminosity based on established relationships with spectral features.
 
-## IMPORTANT NOTE
+## Important notes
 
 The H-band feature definitions in Table 1 in Newton et al. (2015) are from a previous version of this code. The feature definitions included here are correct, and are consistent with the rest of the paper.
 
+Minor modifications from the original version of the radial code improve robustness, but result in small differences in the measured EWs and the inferred stellar properties. These differences are within estimated errors.
+
 ## Routines
 
-## example
+### example
 Demonstrates use of `ern_rv` and `measure_ew` on spectra, showing the effect of oversampling and spectral resolution.
 
 ### jl_example
