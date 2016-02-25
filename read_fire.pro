@@ -8,10 +8,11 @@ FUNCTION read_fire, star, dir=dir, suffix=suffix, noerr=noerr, irtf=irtf, struct
   IF ~KEYWORD_SET(suffix) THEN $
     suffix = '_F.fits'
   IF ~KEYWORD_SET(dir) THEN $
-    dir = '' $
+    d = '' $
   ELSE $
-    dir = dir+'/'
-  f_file = dir+star+suffix
+    d = dir+'/'
+  f_file = d+star+suffix
+  print, "FILE: ", f_file
 
   ; read in the flux file, wavelengths in microns
   flx = readfits(f_file,hd, silent=silent)
@@ -32,7 +33,8 @@ FUNCTION read_fire, star, dir=dir, suffix=suffix, noerr=noerr, irtf=irtf, struct
     
   ; read in the error file
   ENDIF ELSE BEGIN
-    e_file = dir+sxpar(hd,'SIGFILE')
+    e_file = d+sxpar(hd,'SIGFILE')
+    print, "SIGFILE: ", e_file
     err = readfits(e_file,ehd, silent=silent)
     IF KEYWORD_SET(irtf) THEN $
       err[WHERE(flx GT 0)] = gauss_smooth(err[WHERE(flx GT 0)], resol)
