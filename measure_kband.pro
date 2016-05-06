@@ -66,7 +66,8 @@ PRO measure_kband, data, $
   hindk2=hind, sptype=sp_hind, $
   niters=ni, error=doerrors, $
   ccorr=ccorr, contf=contf, atrest=atrest, $
-  showplot=showplot, quiet=quiet
+  showplot=showplot, quiet=quiet, $
+  std=std
 
   IF KEYWORD_SET(doerrors) THEN BEGIN
     IF ~KEYWORD_SET(ni) THEN ni=100
@@ -75,7 +76,8 @@ PRO measure_kband, data, $
   ENDIF ELSE ni = 0
   
   ; standard RV file
-  std = MRDFITS('$NIREW/spec/J0727+0513_rest.fits',0, /silent)
+  IF ~KEYWORD_SET(std) THEN $
+    std = MRDFITS('$NIREW/spec/J0727+0513_rest.fits',0, /silent)
 
   ; line definitions
   READCOL, '$NIREW/linedefs.txt', lineall, f1all,f2all, c1all, c2all, c3all, c4all,  format='A,F,F,F,F,F,F'

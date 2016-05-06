@@ -73,10 +73,12 @@ PRO MEASURE_HBAND, data, $
   ew=ew, eew=eew, $
   niters=ni, error=doerrors, $
   ccorr=ccorr, contf=contf, atrest=atrest, $
-  showplot=showplot, quiet=quiet
+  showplot=showplot, quiet=quiet, $
+  std=std
   
   ; standard RV file
-  std = MRDFITS('$NIREW/spec/J0727+0513_rest.fits',0, /silent)
+  IF ~KEYWORD_SET(std) THEN $
+    std = MRDFITS('$NIREW/spec/J0727+0513_rest.fits',0, /silent)
 
   ; line definitions
   READCOL, '$NIREW/linedefs.txt', lineall, f1all,f2all, c1all, c2all, c3all, c4all,  format='A,F,F,F,F,F,F'

@@ -1,4 +1,4 @@
-FUNCTION water_index, lambda, spectra, sp=sp, verbose=verbose
+FUNCTION water_index, lambda, flux, sp=sp, verbose=verbose
 
     IF ~KEYWORD_SET(verbose) THEN verbose = 0
 
@@ -14,11 +14,16 @@ FUNCTION water_index, lambda, spectra, sp=sp, verbose=verbose
 	    sp = [[2.070,2.090],[2.235,2.255],[2.360,2.380]]
     ENDELSE 
 
+    out = fltarr(3)
     FOR i=0,2 DO BEGIN
-        sp[*,i] = MEDIAN(spectra[WHERE(lambda GE sp[0,i] AND lambda LE sp[1,i])])
+	roi = WHERE(lambda GE sp[0,i] AND lambda LE sp[1,i], count)
+	IF count GT 0 THEN $
+	  out[i] = MEDIAN(flux[roi]) $
+	ELSE $
+	  RETURN, !values.f_nan
     ENDFOR
-    sp = sp[0,*]
-    index = sp[0] * sp[2] / (sp[1]^2.)
+    
+    index = out[0] * out[2] / (out[1]^2.)
 
     RETURN, index
     

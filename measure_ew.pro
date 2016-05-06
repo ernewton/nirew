@@ -57,7 +57,9 @@ FUNCTION MEASURE_EW, $
   nan=nan, $ ; bad measurements are NaNs
   zero=zero, $ ; bad measurements are zeros
   showplot=showplot, $
-  quiet=quiet
+  quiet=quiet, $
+  mictoang=mictoang, $
+  cflat=cflat, cmean=cmean ; keywords for EW_PSEUDO
 
   slambda = lambda ; don't modify the original value
   sflux = flux
@@ -73,7 +75,12 @@ FUNCTION MEASURE_EW, $
   ENDIF
   IF ~KEYWORD_SET(nan) AND ~KEYWORD_SET(zero) THEN IF ~KEYWORD_SET(quiet) THEN print, "MEASURE_EW: using all provided data."
 
-
+  ; wavelength in microns? if so, convert EW to Angstroms
+  IF N_ELEMENTS(mictoang) EQ 0 THEN $
+    micronsflag = 1 $
+  ELSE $
+    micronsflag = mictoang
+    
   ; do rv offset
   IF KEYWORD_SET(rvoffset) THEN BEGIN
     slambda = slambda - rvoffset/(3.e5)*slambda
@@ -81,7 +88,7 @@ FUNCTION MEASURE_EW, $
   ENDIF
 
   ; find pseudocontinuum 
-  pseudo=ew_pseudo(slambda, sflux, continuum)
+  pseudo=ew_pseudo(slambda, sflux, continuum, flat=cflat, mean=cmean)
 
   ; feature region of interest
   roi=WHERE(slambda GE feature[0] AND slambda LE feature[1], count)
@@ -92,18 +99,21 @@ FUNCTION MEASURE_EW, $
     width=TSUM(slambda[roi],1-sflux[roi]/pseudo[roi])
 
     ; output
-    out=width*10^4.
+    IF KEYWORD_SET(micronsflag) THEN $
+      out=width*10^4. $
+    ELSE $
+      out=width
   ENDELSE
 
   IF KEYWORD_SET(showplot) AND FINITE(out) THEN BEGIN
   
     plot, slambda, sflux, xrange=[continuum[0,0]-.012,continuum[1,1]+.012], thick=2, /ynozero, /xsty
-    oplot,[feature[0],feature[0]],[0,100]
-    oplot,[feature[1],feature[1]],[0,100]
-    oplot,[continuum[0,0],continuum[0,0]],[0,10],linestyle=2
-    oplot, [continuum[0,1],continuum[0,1]],[0,100],linestyle=2
-    oplot, [continuum[1,1],continuum[1,1]],[0,100],linestyle=2
-    oplot, [continuum[1,0],continuum[1,0]],[0,100],linestyle=2
+    oplot,[feature[0],feature[0]],[!y.crange]
+    oplot,[feature[1],feature[1]],[!y.crange]
+    oplot,[continuum[0,0],continuum[0,0]],[!y.crange],linestyle=2
+    oplot, [continuum[0,1],continuum[0,1]],[!y.crange],linestyle=2
+    oplot, [continuum[1,1],continuum[1,1]],[!y.crange],linestyle=2
+    oplot, [continuum[1,0],continuum[1,0]],[!y.crange],linestyle=2
     oplot, lambda, pseudo
 
     print, 'MEASURE_EW: Measured EW in Angstroms: ', out
