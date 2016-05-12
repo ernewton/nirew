@@ -1,6 +1,7 @@
 FUNCTION EW2LUM, mg1, mg3, emg1, emg3, err=err, erand=erand
 
-  res = [0.832, -0.176, 0.266, -3.491]
+;   res = [0.832, -0.176, 0.266, -3.491]
+  res = [0.783, -0.169, 0.267, -3.417]
   loglum =  res[0] * mg3 $
     + res[1] * mg3^2 $
     + res[2] * mg1 $
@@ -16,3 +17,5 @@ FUNCTION EW2LUM, mg1, mg3, emg1, emg3, err=err, erand=erand
   
   RETURN, loglum
 END
+
+; difference (new-old): sigma = 0.016, median = 0.002

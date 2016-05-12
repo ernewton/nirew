@@ -1,6 +1,7 @@
 FUNCTION EW2RAD, mg2, ala, emg2, eala, err=err, erand=erand
 
-  res = [-0.0489, 0.275,  0.201, - 0.216]
+;   res = [-0.0489, 0.275,  0.201, - 0.216]
+  res = [-0.0503, 0.283,  0.206, - 0.235]
   rad = res[0] * mg2 $
     + res[1] * ala $
     + res[2] * mg2/ala $
@@ -17,3 +18,5 @@ FUNCTION EW2RAD, mg2, ala, emg2, eala, err=err, erand=erand
   RETURN, rad
   
 END
+
+; difference: sigma = 0.006, median = 0.005

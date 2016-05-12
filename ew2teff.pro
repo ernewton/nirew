@@ -1,6 +1,7 @@
 FUNCTION EW2TEFF, mg1, ala, alb, emg1, eala, ealb, err=err, erand=erand
 
-  res = [271.4, 392.7, 2427]
+;   res = [271.4, 392.7, 2427]
+  res = [261.9, 413.8, 2402]
   teff = res[0] * ala $
     + res[1] * mg1/alb $
     + res[2]
@@ -15,3 +16,5 @@ FUNCTION EW2TEFF, mg1, ala, alb, emg1, eala, ealb, err=err, erand=erand
   
 RETURN, teff
 END
+
+; difference: sigma = 9 K, median = 4 K
